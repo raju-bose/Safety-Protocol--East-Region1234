@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root{--blue:#1f4e78;--green:#1e8e3e;--red:#c5221f;--amber:#f9ab00;--bg:#f2f5f9;--card:#fff;--txt:#1b1f24;--mut:#5f6b7a;--bd:#d6dde6}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:16px}
+  header{background:var(--blue);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header small{display:block;font-size:12px;opacity:.85;font-weight:400}
+  header button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px}
+  main{max-width:520px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 12px;color:var(--blue);display:flex;align-items:center;gap:8px}
+  .step{background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+  .step.done{background:var(--green)}
+  label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+  input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--bd);border-radius:8px;font-size:16px;background:#fff;color:var(--txt)}
+  textarea{resize:vertical;min-height:60px}
+  .btn{display:block;width:100%;padding:13px;border:0;border-radius:8px;font-size:16px;font-weight:600;background:var(--blue);color:#fff;margin-top:14px;cursor:pointer}
+  .btn.green{background:var(--green)} .btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+  .btn:disabled{background:#b8c2cc;color:#fff;border:0;cursor:not-allowed}
+  .ppe{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;font-size:15px}
+  .ppe input{width:22px;height:22px;flex:none}
+  .ppe.on{border-color:var(--green);background:#e6f4ea}
+  .note{font-size:13px;padding:10px 12px;border-radius:8px;margin-top:10px}
+  .note.red{background:#fce8e6;color:var(--red)} .note.green{background:#e6f4ea;color:var(--green)} .note.info{background:#e8f0fe;color:var(--blue)}
+  .hidden{display:none!important}
+  #preview{width:100%;border-radius:8px;margin-top:10px;border:1px solid var(--bd)}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tabs button{flex:1;padding:10px;border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:8px;font-weight:600;font-size:14px}
+  .tabs button.act{background:var(--blue);color:#fff}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+  th{color:var(--mut);font-weight:600}
+  .pill{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600}
+  .pill.a{background:#fff4d6;color:#8a5a00} .pill.y{background:#e6f4ea;color:var(--green)} .pill.n{background:#fce8e6;color:var(--red)}
+  .tog{font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);background:#fff}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#1b1f24;color:#fff;padding:12px 18px;border-radius:8px;font-size:14px;max-width:90%;z-index:9;display:none}
+  #busy{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:8;font-weight:600;color:var(--blue)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .small{font-size:12px;color:var(--mut)}
+</style>
+</head>
+<body>
+
+<header>
+  <div><h1>East Zone Site Safety</h1><small id="hdrUser">Jio-bp RO Sites</small></div>
+  <button id="btnLogout" class="hidden" onclick="doLogout()">Logout</button>
+</header>
+
+<main>
+  <!-- ============ LOGIN ============ -->
+  <section id="scrLogin">
+    <div class="card">
+      <h2>Login</h2>
+      <label for="empId">Employee ID</label>
+      <input id="empId" inputmode="numeric" placeholder="e.g. 005" maxlength="4">
+      <label for="pin">PIN (registered mobile number)</label>
+      <input id="pin" type="password" inputmode="numeric" placeholder="10-digit mobile no." maxlength="10">
+      <button class="btn" onclick="doLogin()">Login</button>
+      <div id="loginMsg" class="note red hidden"></div>
+      <div id="srvMsg" class="note info">Checking server…</div>
+    </div>
+    <p class="small" style="text-align:center">Admins (Raju Bose, Yugandhar Kanekar, Gaurav Srivastav, Avinash Sakpal, Nayan Nimkar): after login, use the <b>Employees</b> tab to add new employees.</p>
+    <p class="small" style="text-align:center">Access restricted to East zone (WB, BH, JH, OR, NE) staff only.</p>
+  </section>
+
+  <!-- ============ APP ============ -->
+  <section id="scrApp" class="hidden">
+    <div class="tabs">
+      <button id="tabCheck" class="act" onclick="showTab('check')">Site Check-in</button>
+      <button id="tabMine" onclick="showTab('mine')">My Check-ins</button>
+      <button id="tabAdmin" class="hidden" onclick="showTab('admin')">Employees</button>
+    </div>
+
+    <!-- ---- CHECK-IN ---- -->
+    <div id="pgCheck">
+      <div class="card">
+        <h2><span class="step" id="s1">1</span>Site details</h2>
+        <label for="state">State</label>
+        <select id="state"></select>
+        <div class="row2">
+          <div><label for="roCode">RO Code</label><input id="roCode" placeholder="ORF188" style="text-transform:uppercase"></div>
+          <div><label for="roName">RO Name</label><input id="roName" placeholder="RO name" style="text-transform:uppercase"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step" id="s2">2</span>Safety kit (PPE)</h2>
+        <label class="ppe"><input type="checkbox" class="ppeChk" data-k="helmet"> Safety Helmet</label>
+        <label class="ppe"><input type="checkbox" class="ppeChk" data-k="shoes"> Safety Shoes</label>
+        <label class="ppe"><input type="checkbox" class="ppeChk" data-k="jacket"> Reflective Jacket</label>
+        <label class="ppe"><input type="checkbox" class="ppeChk" data-k="gloves"> Hand Gloves</label>
+        <div id="ppeMsg" class="note red">Wear the full safety kit. The camera stays locked until every item is ticked.</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step" id="s3">3</span>GPS location</h2>
+        <button class="btn ghost" id="btnGps" onclick="getGps()">Capture my location</button>
+        <div id="gpsMsg" class="note info hidden"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step" id="s4">4</span>Photo with safety kit</h2>
+        <input type="file" id="camera" accept="image/*" capture="environment" class="hidden" onchange="onPhoto(this)">
+        <button class="btn" id="btnCam" disabled onclick="document.getElementById('camera').click()">🔒 Camera locked</button>
+        <img id="preview" class="hidden" alt="Captured photo">
+        <label for="remarks">Remarks (optional)</label>
+        <textarea id="remarks" maxlength="300"></textarea>
+      </div>
+
+      <button class="btn green" id="btnSubmit" disabled onclick="submitCheckin()">Submit check-in</button>
+      <div id="submitMsg" class="note hidden"></div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- ---- MY CHECK-INS ---- -->
+    <div id="pgMine" class="hidden">
+      <div class="card"><h2>My last 10 check-ins</h2><div id="mineList" class="small">Loading…</div></div>
+    </div>
+
+    <!-- ---- ADMIN ---- -->
+    <div id="pgAdmin" class="hidden">
+      <div class="card">
+        <h2>Add new employee</h2>
+        <label for="nName">Employee name</label>
+        <input id="nName" placeholder="Full name" style="text-transform:uppercase">
+        <label for="nMobile">Mobile number (becomes login PIN)</label>
+        <input id="nMobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile no.">
+        <label for="nRole">Role</label>
+        <select id="nRole"><option value="ENGINEER">Engineer</option><option value="ADMIN">Admin</option></select>
+        <button class="btn" onclick="addEmp()">Add employee</button>
+        <div id="addMsg" class="note hidden"></div>
+      </div>
+      <div class="card">
+        <h2>Employee list</h2>
+        <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Status</th></tr></thead>
+        <tbody id="empBody"><tr><td colspan="4">Loading…</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="busy">Please wait…</div>
+<div id="toast"></div>
+
+<script>
+let TOKEN = null, USER = null, GPS = null, PHOTO = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* Your deployed Apps Script web-app link (used when this file is opened on its own) */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxwkCAAG8XNXVAcV7XBqmPRTNguhjHXplqdXipVGknL0mE04b3Uc-YGtSR3Y2eYJst8mg/exec';
+const IN_GAS = !!(window.google && google.script && google.script.run);
+
+function call(fn, ...args) {
+  busy(true);
+  const done = r => {
+    busy(false);
+    if (r && r.error && /Session expired/.test(r.error)) { toast(r.error); resetToLogin(); }
+    return r || { ok: false, error: 'No response from server.' };
+  };
+  const fail = e => {
+    busy(false);
+    const msg = 'Cannot reach server: ' + (e && e.message ? e.message : e);
+    toast(msg);
+    return { ok: false, error: msg };
+  };
+  if (IN_GAS) {
+    return new Promise(res => google.script.run
+      .withSuccessHandler(r => res(done(r)))
+      .withFailureHandler(e => res(fail(e)))[fn](...args));
+  }
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // avoids CORS pre-flight
+    body: JSON.stringify({ fn: fn, args: args })
+  }).then(r => r.json()).then(done).catch(fail);
+}
+
+/* On load: confirm the server is reachable and setup() has been run */
+async function checkServer() {
+  const s = $('srvMsg');
+  const r = await call('ping');
+  if (r.ok) note(s, 'green', `Server connected • ${r.users} employees registered`);
+  else note(s, 'red', r.error || 'Server not reachable');
+}
+function busy(on) { $('busy').style.display = on ? 'flex' : 'none'; }
+function toast(m) { const t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 3500); }
+function note(el, cls, msg) { el.className = 'note ' + cls; el.textContent = msg; }
+
+/* ---------------- LOGIN ---------------- */
+async function doLogin() {
+  const id = $('empId').value.trim(), pin = $('pin').value.trim();
+  if (!id || !pin) return note($('loginMsg'), 'red', 'Enter Employee ID and PIN.');
+  const r = await call('login', id, pin);
+  if (!r.ok) return note($('loginMsg'), 'red', r.error);
+  TOKEN = r.token; USER = r.user;
+  $('loginMsg').className = 'note hidden';
+  $('pin').value = '';
+  $('hdrUser').textContent = `${USER.name} (${USER.id})${USER.role === 'ADMIN' ? ' • Admin' : ''}`;
+  $('state').innerHTML = '<option value="">Select state</option>' + r.states.map(s => `<option>${esc(s)}</option>`).join('');
+  $('tabAdmin').classList.toggle('hidden', USER.role !== 'ADMIN');
+  $('scrLogin').classList.add('hidden'); $('scrApp').classList.remove('hidden'); $('btnLogout').classList.remove('hidden');
+  showTab('check');
+}
+async function doLogout() { if (TOKEN) await call('logout', TOKEN); resetToLogin(); }
+function resetToLogin() {
+  TOKEN = USER = null; resetForm();
+  $('scrApp').classList.add('hidden'); $('btnLogout').classList.add('hidden'); $('scrLogin').classList.remove('hidden');
+  $('hdrUser').textContent = 'Jio-bp RO Sites';
+}
+
+function showTab(t) {
+  ['check', 'mine', 'admin'].forEach(x => {
+    $('pg' + x[0].toUpperCase() + x.slice(1)).classList.toggle('hidden', x !== t);
+    $('tab' + x[0].toUpperCase() + x.slice(1)).classList.toggle('act', x === t);
+  });
+  if (t === 'mine') loadMine();
+  if (t === 'admin') loadEmps();
+}
+
+/* ---------------- PPE GATE ---------------- */
+document.querySelectorAll('.ppeChk').forEach(c => c.addEventListener('change', e => {
+  e.target.closest('.ppe').classList.toggle('on', e.target.checked);
+  if (!e.target.checked) { PHOTO = null; $('preview').classList.add('hidden'); }   // kit removed → discard photo
+  refresh();
+}));
+function ppeAll() { return [...document.querySelectorAll('.ppeChk')].every(c => c.checked); }
+function ppeObj() { const o = {}; document.querySelectorAll('.ppeChk').forEach(c => o[c.dataset.k] = c.checked); return o; }
+
+function siteOk() { return $('state').value && $('roCode').value.trim().length >= 3 && $('roName').value.trim(); }
+['state', 'roCode', 'roName'].forEach(id => $(id).addEventListener('input', refresh));
+
+function refresh() {
+  const p = ppeAll(), s = siteOk(), g = !!GPS;
+  $('s1').classList.toggle('done', !!s); $('s2').classList.toggle('done', p);
+  $('s3').classList.toggle('done', g);   $('s4').classList.toggle('done', !!PHOTO);
+  note($('ppeMsg'), p ? 'green' : 'red', p ? 'Safety kit confirmed.' : 'Wear the full safety kit. The camera stays locked until every item is ticked.');
+  const camOk = p && g && s;
+  $('btnCam').disabled = !camOk;
+  $('btnCam').textContent = camOk ? (PHOTO ? '📷 Retake photo' : '📷 Open camera') :
+    !s ? '🔒 Fill site details first' : !p ? '🔒 Camera locked – wear safety kit' : '🔒 Capture GPS first';
+  $('btnSubmit').disabled = !(camOk && PHOTO);
+}
+
+/* ---------------- GPS ---------------- */
+function getGps() {
+  const m = $('gpsMsg');
+  if (!navigator.geolocation) return note(m, 'red', 'GPS not supported on this phone/browser.');
+  note(m, 'info', 'Getting location… keep GPS ON and stay in open sky.');
+  navigator.geolocation.getCurrentPosition(p => {
+    GPS = { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) };
+    note(m, GPS.acc <= 100 ? 'green' : 'info', `Location: ${GPS.lat}, ${GPS.lng} (±${GPS.acc} m)` + (GPS.acc > 100 ? ' – low accuracy, you may retry.' : ''));
+    $('btnGps').textContent = 'Re-capture location';
+    refresh();
+  }, e => {
+    GPS = null; refresh();
+    note(m, 'red', e.code === 1 ? 'Location permission denied. Allow location for this site in browser settings and retry.' : 'Could not get location. Turn ON GPS and retry.');
+  }, { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 });
+}
+
+/* ---------------- PHOTO (resize + watermark) ---------------- */
+function onPhoto(inp) {
+  const f = inp.files && inp.files[0]; inp.value = '';
+  if (!f) return;
+  if (!ppeAll()) { toast('Wear full safety kit first.'); return; }
+  const img = new Image();
+  img.onload = () => {
+    const max = 1280, sc = Math.min(1, max / Math.max(img.width, img.height));
+    const w = Math.round(img.width * sc), h = Math.round(img.height * sc);
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const x = cv.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+    const now = new Date(), ts = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const lines = [
+      `${$('roCode').value.trim().toUpperCase()} - ${$('roName').value.trim().toUpperCase()} (${$('state').value})`,
+      `${USER.name} (${USER.id})`,
+      `${ts} | ${GPS.lat}, ${GPS.lng} ±${GPS.acc}m`
+    ];
+    const fs = Math.max(14, Math.round(w / 40)), bh = fs * 1.35 * lines.length + fs;
+    x.fillStyle = 'rgba(0,0,0,.6)'; x.fillRect(0, h - bh, w, bh);
+    x.fillStyle = '#fff'; x.font = `600 ${fs}px Arial`;
+    lines.forEach((l, i) => x.fillText(l, fs * .6, h - bh + fs * 1.3 * (i + 1)));
+    PHOTO = cv.toDataURL('image/jpeg', 0.72);
+    $('preview').src = PHOTO; $('preview').classList.remove('hidden');
+    URL.revokeObjectURL(img.src); refresh();
+  };
+  img.onerror = () => toast('Could not read photo, please retake.');
+  img.src = URL.createObjectURL(f);
+}
+
+/* ---------------- SUBMIT ---------------- */
+async function submitCheckin() {
+  if (!(ppeAll() && GPS && PHOTO && siteOk())) return toast('Complete all 4 steps.');
+  const r = await call('submitCheckin', TOKEN, {
+    state: $('state').value, roCode: $('roCode').value, roName: $('roName').value,
+    lat: GPS.lat, lng: GPS.lng, acc: GPS.acc, ppe: ppeObj(), photo: PHOTO, remarks: $('remarks').value
+  });
+  const m = $('submitMsg');
+  if (!r.ok) return note(m, 'red', r.error);
+  note(m, 'green', `✅ Check-in saved. ID: ${r.checkinId}`);
+  toast('Check-in saved'); resetForm(true);
+}
+function resetForm(keepMsg) {
+  GPS = PHOTO = null;
+  ['roCode', 'roName', 'remarks'].forEach(id => $(id).value = '');
+  $('state').value = '';
+  document.querySelectorAll('.ppeChk').forEach(c => { c.checked = false; c.closest('.ppe').classList.remove('on'); });
+  $('preview').classList.add('hidden'); $('gpsMsg').className = 'note hidden'; $('btnGps').textContent = 'Capture my location';
+  if (!keepMsg) $('submitMsg').className = 'note hidden';
+  refresh();
+}
+
+/* ---------------- MY CHECK-INS ---------------- */
+async function loadMine() {
+  const r = await call('myCheckins', TOKEN);
+  if (!r.ok) return $('mineList').textContent = r.error;
+  $('mineList').innerHTML = r.rows.length ? '<table><tr><th>Date</th><th>RO</th><th>Photo</th></tr>' +
+    r.rows.map(x => `<tr><td>${esc(x.date)}<br>${esc(x.time)}</td><td>${esc(x.roCode)}<br><span class="small">${esc(x.roName)}</span></td>
+      <td><a href="${esc(x.photo)}" target="_blank" rel="noopener">View</a></td></tr>`).join('') + '</table>'
+    : 'No check-ins yet.';
+}
+
+/* ---------------- ADMIN ---------------- */
+async function loadEmps() {
+  const r = await call('listEmployees', TOKEN);
+  if (!r.ok) return $('empBody').innerHTML = `<tr><td colspan="4">${esc(r.error)}</td></tr>`;
+  $('empBody').innerHTML = r.rows.map(e => `<tr>
+    <td>${esc(e.id)}</td>
+    <td>${esc(e.name)}<br><span class="small">${esc(e.pin || 'No PIN')} • by ${esc(e.addedBy)}</span></td>
+    <td>${e.role === 'ADMIN' ? '<span class="pill a">ADMIN</span>' : 'Engineer'}</td>
+    <td><span class="pill ${e.active === 'Y' ? 'y' : 'n'}">${e.active === 'Y' ? 'Active' : 'Inactive'}</span><br>
+      ${e.id !== USER.id ? `<button class="tog" onclick="toggleEmp('${esc(e.id)}',${e.active !== 'Y'})">${e.active === 'Y' ? 'Deactivate' : 'Activate'}</button>` : ''}</td>
+  </tr>`).join('');
+}
+async function addEmp() {
+  const m = $('addMsg');
+  const r = await call('addEmployee', TOKEN, $('nName').value, $('nMobile').value, $('nRole').value);
+  if (!r.ok) return note(m, 'red', r.error);
+  note(m, 'green', `Added ${r.name} → Employee ID ${r.empId}, PIN ${r.pin} (${r.role})`);
+  $('nName').value = $('nMobile').value = ''; $('nRole').value = 'ENGINEER';
+  loadEmps();
+}
+async function toggleEmp(id, act) {
+  if (!confirm(`${act ? 'Activate' : 'Deactivate'} employee ${id}?`)) return;
+  const r = await call('setActive', TOKEN, id, act);
+  if (!r.ok) return toast(r.error);
+  loadEmps();
+}
+
+$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+refresh();
+checkServer();
+</script>
+</body>
+</html>
