@@ -1,14 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-<base target="_top">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>East Zone Site Safety</title>
+<meta name="description" content="Jio-bp RO site safety check-in – East zone">
+<meta name="theme-color" content="#1f4e78">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Site Safety">
 <style>
   :root{--blue:#1f4e78;--green:#1e8e3e;--red:#c5221f;--amber:#f9ab00;--bg:#f2f5f9;--card:#fff;--txt:#1b1f24;--mut:#5f6b7a;--bd:#d6dde6}
   *{box-sizing:border-box}
   body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:16px}
-  header{background:var(--blue);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+  header{background:var(--blue);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
   header h1{font-size:17px;margin:0;font-weight:600}
   header small{display:block;font-size:12px;opacity:.85;font-weight:400}
   header button{background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px}
@@ -49,7 +58,10 @@
 
 <header>
   <div><h1>East Zone Site Safety</h1><small id="hdrUser">Jio-bp RO Sites</small></div>
-  <button id="btnLogout" class="hidden" onclick="doLogout()">Logout</button>
+  <div style="display:flex;gap:8px">
+    <button id="btnInstall" class="hidden" onclick="installApp()">⬇ Install app</button>
+    <button id="btnLogout" class="hidden" onclick="doLogout()">Logout</button>
+  </div>
 </header>
 
 <main>
@@ -145,6 +157,7 @@
   </section>
 </main>
 
+<div id="offline" class="note red hidden" style="position:fixed;top:0;left:0;right:0;margin:0;border-radius:0;z-index:10;text-align:center">No internet – check-ins need mobile data / Wi-Fi</div>
 <div id="busy">Please wait…</div>
 <div id="toast"></div>
 
@@ -355,6 +368,22 @@ async function toggleEmp(id, act) {
 $('pin').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 refresh();
 checkServer();
+
+/* ---------------- INSTALLABLE APP (PWA) ---------------- */
+let installEvt = null;
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !IN_GAS) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('btnInstall').classList.remove('hidden'); });
+window.addEventListener('appinstalled', () => { installEvt = null; $('btnInstall').classList.add('hidden'); toast('App installed – open it from your home screen'); });
+async function installApp() {
+  if (installEvt) { installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('btnInstall').classList.add('hidden'); }
+  else toast('Use browser menu ⋮ → "Add to Home screen" / "Install app"');
+}
+function netStatus() { $('offline').classList.toggle('hidden', navigator.onLine); }
+window.addEventListener('online', () => { netStatus(); checkServer(); });
+window.addEventListener('offline', netStatus);
+netStatus();
 </script>
 </body>
 </html>
